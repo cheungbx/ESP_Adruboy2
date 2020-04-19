@@ -3,15 +3,19 @@
  * \brief
  * The Arduboy2Base and Arduboy2 classes and support objects and definitions.
  */
+#define OLED_I2C
+// #define TFT
 
 #ifndef ARDUBOY2_H
 #define ARDUBOY2_H
 
-#include "SPI.h"
-#include "TFT_eSPI.h"
+#ifndef OLED_I2C
+  #include "SPI.h"
+  #include "TFT_eSPI.h"
+#endif
 
 #include <Arduino.h>
-#include <ESP_EEPROM.h>
+#include <EEPROM.h>
 #include "Arduboy2Core.h"
 #include "Arduboy2Beep.h"
 #include "Sprites.h"
