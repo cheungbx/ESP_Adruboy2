@@ -1,6 +1,6 @@
 # ESP_Arduboy2 library -  a Fork of the ESPboy_Arduboy2_lib by ESPBoy_EDU
-1. Add support for OLED SSD1306, both i2c and SPI, while keeping support of TFT LCD ST7735 or ST7789
-2. Add support for buttons supported by native ESP8266 pins, and buttons driven by ADC (A0) and resistor ladders.
+1. Avoid using extra I2C pin extender to add support for buttons supported by native ESP8266 pins, and buttons driven by ADC (A0) and resistor ladders.
+2. Add support for 2 paddles driven by ADC(A0).
 
 
 
