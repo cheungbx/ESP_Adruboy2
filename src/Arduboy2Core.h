@@ -6,12 +6,24 @@
 
 #ifndef ARDUBOY2_CORE_H
 #define ARDUBOY2_CORE_H
+
+#define OLED_I2C
+
 #include <ESP8266WiFi.h>
 #include <Arduino.h>
-#include <SPI.h>
-#include "TFT_eSPI.h"
-#include "Adafruit_MCP23017.h"
-#include "Adafruit_MCP4725.h"
+
+
+#ifdef OLED_I2C
+  #include <brzo_i2c.h> // Only needed for Arduino 1.6.5 and earlier
+  #include "SSD1306Brzo.h"
+  #define OLED_I2C_ADRESS 0x3c
+
+#else
+  #include <SPI.h>
+  #include "TFT_eSPI.h"
+  #include "Adafruit_MCP23017.h"
+  #include "Adafruit_MCP4725.h"
+#endif
 #include "ESPboyLogo.h"
 #include "ESPboy_LED.h"
 #include <limits.h>
@@ -30,17 +42,55 @@
 #define PIN_SPEAKER_2 D8
 
 #define PIN_ADC A0
-#define PIN_BUTTONS D1
-#define PIN_PADDLE  D2
-#define PIN_PADDLE2 D3
 
-#define LEDPIN 	D6
+
 #define RGB_ON 	200
 #define RGB_OFF 0
 #define RED_LED  0
 #define GREEN_LED  1
 #define BLUE_LED  2
 
+
+#ifdef OLED_I2C
+  #define PIN_LEFT_BUTTON D6
+  #define PIN_RIGHT_BUTTON D7
+  #define PIN_UP_BUTTON D5
+  #define PIN_DOWN_BUTTON D4
+  #define PIN_A_BUTTON D3
+  #define PIN_B_BUTTON D0
+
+  // OLED hardware (SSD1306)
+
+  #define OLED_PIXELS_INVERTED 0xA7 // All pixels inverted
+  #define OLED_PIXELS_NORMAL 0xA6 // All pixels normal
+
+  #define OLED_ALL_PIXELS_ON 0xA5 // all pixels on
+  #define OLED_PIXELS_FROM_RAM 0xA4 // pixels mapped to display RAM contents
+
+  #define OLED_VERTICAL_FLIPPED 0xC0 // reversed COM scan direction
+  #define OLED_VERTICAL_NORMAL 0xC8 // normal COM scan direction
+
+  #define OLED_HORIZ_FLIPPED 0xA0 // reversed segment re-map
+  #define OLED_HORIZ_NORMAL 0xA1 // normal segment re-map
+
+#else
+
+  #define PIN_BUTTONS D1
+  #define PIN_PADDLE  D2
+  #define PIN_PADDLE2 D3
+  #define LEDPIN 	D6
+
+
+  #define PAD_LEFT        0x01
+  #define PAD_UP          0x02
+  #define PAD_DOWN        0x04
+  #define PAD_RIGHT       0x08
+  #define PAD_ACT         0x10
+  #define PAD_ESC         0x20
+  #define PAD_LFT         0x40
+  #define PAD_RGT         0x80
+  #define PAD_ANY         0xff
+#endif
 
 // bit values for button states
 // these are determined by the buttonsState() function
@@ -51,15 +101,6 @@
 #define A_BUTTON 	 2     /**< The A button value for functions requiring a bitmask */
 #define B_BUTTON 	 1     /**< The B button value for functions requiring a bitmask */
 
-#define PAD_LEFT        0x01
-#define PAD_UP          0x02
-#define PAD_DOWN        0x04
-#define PAD_RIGHT       0x08
-#define PAD_ACT         0x10
-#define PAD_ESC         0x20
-#define PAD_LFT         0x40
-#define PAD_RGT         0x80
-#define PAD_ANY         0xff
 
 
 #define WIDTH 128 /**< The width of the display in pixels */
@@ -86,8 +127,9 @@ class Arduboy2Core
 
   public:
 
+#ifndef OLED_I2C
     static uint8_t sBuffer[(HEIGHT*WIDTH)/8];
-
+#endif
     Arduboy2Core();
 
 

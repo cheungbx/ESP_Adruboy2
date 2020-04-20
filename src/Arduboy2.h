@@ -8,12 +8,18 @@
 #ifndef ARDUBOY2_H
 #define ARDUBOY2_H
 
+#define OLED_I2C
 
+#ifdef OLED_I2C
+  #include <brzo_i2c.h> // Only needed for Arduino 1.6.5 and earlier
+  #include "SSD1306Brzo.h"
+#else
   #include "SPI.h"
   #include "TFT_eSPI.h"
+#endif
 
 #include <Arduino.h>
-#include <EEPROM.h>
+// #include <EEPROM.h>
 #include "Arduboy2Core.h"
 #include "Arduboy2Beep.h"
 #include "Sprites.h"
@@ -188,6 +194,9 @@ class Arduboy2Base : public Arduboy2Core
   Arduboy2Audio audio;
   BeepPin1 tunes;
 
+#ifdef OLED_I2C
+    static uint8_t* sBuffer;
+#endif
   /** \brief
    * Initialize the hardware, display the boot logo, provide boot utilities, etc.
    *

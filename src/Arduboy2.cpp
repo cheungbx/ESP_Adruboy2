@@ -14,9 +14,9 @@
  #include <brzo_i2c.h> // Only needed for Arduino 1.6.5 and earlier
  #include "SSD1306Brzo.h"
  SSD1306Brzo oled(0x3c, D2, D1); // OLED_I2C_ADRESS, I2C_SDA, I2C_SCL)
-#endif
 
-#ifndef OLED_I2C
+ uint8_t* Arduboy2Base::sBuffer;
+#else
  extern TFT_eSPI screen;
 // extern Adafruit_MCP23017 mcp;
 // extern Adafruit_MCP4725 dac;
@@ -41,6 +41,16 @@ Arduboy2Base::Arduboy2Base()
 // provides by default
 void Arduboy2Base::begin(){
   boot(); // raw hardware
+
+
+  #ifdef OLED_I2C
+    oled.init();
+    oled.flipScreenVertically();
+
+    // link the buffer to this static sBuffer thingi
+    sBuffer = oled.buffer;
+  #endif
+
   clear();
   display(); // blank the display (sBuffer is global, so cleared automatically)
   flashlight(); // light the RGB LED and screen if UP button is being held.
@@ -63,11 +73,13 @@ void Arduboy2Base::flashlight(){
   if (!pressed(UP_BUTTON)) {
     return;
   }
+#ifndef OLED_I2C
   digitalWriteRGB(RGB_ON, RGB_ON, RGB_ON);
   screen.fillScreen(TFT_WHITE);
   while (true) {
     idle();
   }
+#endif
 }
 
 void Arduboy2Base::systemButtons(){
@@ -472,11 +484,17 @@ void Arduboy2Base::drawRect(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t 
 void Arduboy2Base::drawFastVLine
 (int16_t x, int16_t y, uint8_t h, uint8_t color)
 {
+#ifdef OLED_I2C
+    	// this is called in fillRect, so it needs to be the fast version
+    	oled.setColor(OLEDDISPLAY_COLOR(color));
+    	oled.drawVerticalLine(x, y, h);
+#else
   int16_t end = y+h;
   for (int16_t a = maxVal(0,y); a < minVal(end,HEIGHT); a++)
   {
     drawPixel(x,a,color);
   }
+#endif
 }
 
 
@@ -540,8 +558,16 @@ void Arduboy2Base::fillRect(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t 
 
 
 void Arduboy2Base::fillScreen(uint8_t color){
+#ifdef OLED_I2C
+if (color == BLACK) {
+  oled.clear();
+} else {
+  memset(sBuffer, 0xff, 1024);
+}
+#else
 	if (color == BLACK) memset(sBuffer, 0x00, 1024);
     else memset(sBuffer, 0xff, 1024);
+#endif
 }
 
 
@@ -728,7 +754,11 @@ void Arduboy2Base::drawSlowXYBitmap(int16_t x, int16_t y, const uint8_t *bitmap,
 
   for(yi = 0; yi < h; yi++) {
     for(xi = 0; xi < w; xi++ ) {
-      if(!(pgm_read_byte(bitmap + yi * byteWidth + xi / 8) & (128 >> (xi & 7)))) {
+#ifdef OLED_I2C
+        if(!(pgm_read_byte(bitmap + yi * byteWidth + xi / 8) & (128 >> (xi & 7)))) {
+#else
+        if(!(pgm_read_byte(bitmap + yi * byteWidth + xi / 8) & (128 >> (xi & 7)))) {
+#endif
         drawPixel(x + xi, y + yi, color);
       }
     }
@@ -870,7 +900,13 @@ void Arduboy2Base::clear(){
 }
 
 
-void Arduboy2Base::display(){
+void Arduboy2Base::display()
+{
+
+  #ifdef OLED_I2C
+  	oled.display();
+  #else
+
   static uint16_t oBuffer[WIDTH*16];
   static uint8_t currentDataByte;
   static uint16_t foregroundColor, backgroundColor, xPos, yPos, kPos, kkPos, addr;
@@ -891,12 +927,20 @@ void Arduboy2Base::display(){
     }
     screen.pushImage(0, 20+kPos*16, WIDTH, 16, oBuffer);
   }
+#endif
 }
 
 
 void Arduboy2Base::display(bool clear){
+
+#ifdef OLED_I2C
+  oled.clear();
+  display();
+#else
+
   this->display();
   if (clear) this->clear();
+#endif
 }
 
 
